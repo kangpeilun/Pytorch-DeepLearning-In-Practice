@@ -1,5 +1,7 @@
 [TOC]
 
+学习视频：https://www.bilibili.com/video/BV1Zv4y1o7uG?spm_id_from=333.999.0.0
+这是Pytorch实战视频教程，通过对该教程的学习，将进一步提高你的编程能力
 
 
 # Pycharm同步项目到服务器需注意
