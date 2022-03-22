@@ -2,10 +2,6 @@
 
 
 
-学习视频：https://www.bilibili.com/video/BV1Zv4y1o7uG?spm_id_from=333.999.0.0 这是Pytorch实战视频教程，通过对该教程的学习，将进一步提高你的编程能力
-
-深度学习初学者教程(Pytorch)：https://blog.csdn.net/qq_42940160/article/details/123523870
-
 # Pycharm同步项目到服务器需注意
 
 **在图中的位置配置 mapping 映射的位置**，才能在选择 解释器后 将项目上传到你想要的位置
@@ -80,12 +76,6 @@ warnings.filterwarnings("ignore")  #忽略告警
 > 7. RuntimeError: Expected object of scalar type Long but got scalar type Float for argument #2 'target'
 >
 >     >   `该错误中的 'target' 表示的时label，期望label用 long类型表示`，而不是用float类型，修改对应的label的类型 即可解决该问题
->
-> 8. pytorch中`nn.CrossEntropyLoss() <=> nn.LogSoftmax()+nn.NLLLoss()`nn.CrossEntropyLoss()相当于logSoftmax()和nn.NLLLoss()整合
->
->     >   `F.softmax() 是和nn.CrossEntropyLoss()连着用的`，softmax后再进行算交叉熵损失，用nn.CrossEntropyLoss()算完损失，有一个log操作
->
-> 9. `len(dataloader.dataset)` 获取整个数据集的数量，`len(dataloader)` 获取一共有多少个batch
 
 # 深度学习知识点
 
@@ -146,26 +136,6 @@ PS：**一个特征图可以理解为一个通道**
 > - c）文章说很多地方都表明pooling挺有效，所以Inception里面也嵌入了；
 > - d）网络越到后面，特征越抽象，而且每个特征所涉及的感受野也更大了，因此随着层数的增加，3x3和5x5卷积的比例也要增加
 
-## 6.对softmax中dim参数的理解
-
->   #### 直观的: 
->
->   当 dim=0 时，是对每一维度相同位置的数值进行softmax运算
->
->   当 dim=1 时，是对某一维度的列进行softmax运算
->
->   当 dim=2 或 -1 时，是对某一维度的行进行softmax运算
->
->   ![img](https://gitee.com/KangPeiLun/images/raw/master/images/20200320204758144.jpg)
->
->   #### 我的理解：
->
->   dim 表示对哪个维度进行softmax，比如一个shape为(2, 3, 4)的tensor，如果dim=0 则对第0个维度进行softmax，即纬度值为2的那个维度；dim=1 对第1个维度softmax；dim=2或-1 对第2个维度(最后1个维度)softmax；
->
->   在实际应用中，比如对Linear层的输出进行softmax(dim=-1)，因为Linear层是对最后一个维度进行的操作，故dim=-1 对最后一个维度进行softmax
-
-
-
 # Pytorch编程技巧
 
 ## 1.使用map做数据类型的转换
@@ -206,138 +176,11 @@ assert (freeze_layer < total_layers), f'the total_layers is {total_layers}, but 
 # 只有当 assert 后面括号中的 判断语句 为 False 时，程序才会终止，才会出现你写的报错信息
 ```
 
-## 4.Pytorch损失函数总结
-
-
+## 4.nn.CrossEntropyLoss()等价于nn.LogSoftmax()+nn.NLLLoss()
 
 如果最后一层已经LogSoftmax()了，就不能nn.CrossEntropyLoss()来计算了
 
 因为**nn.CrossEntropyLoss()相当于logSoftmax()和nn.NLLLoss()整合**
-
-### BCELoss(二分类)
-
-```python
-    torch.nn.BCELoss(weight=None, size_average=None, reduce=None, reduction='mean')
-    # 创建一个衡量目标和输出之间二进制交叉熵的criterion
-
-    weight (Tensor,可选) – 每批元素损失的手工重标权重。如果给定，则必须是一个大小为“nbatch”的张量。
-    reduction (string,可选) – 指定要应用于输出的reduction操作:' none ' | 'mean' | ' sum '。
-                            “none”:表示不进行任何reduction，
-                             “mean”:输出的和除以输出中的元素数，即求平均值，
-                              “sum”:输出求和。
-                            
-    m = nn.Sigmoid()
-    loss = nn.BCELoss()
-    input = torch.randn(3,requires_grad=True)
-    target = torch.empty(3).random_(2)
-    output = loss(m(input), target)
-```
-
->   -   输入：*(N, \*)*, 代表任意数目附加维度
->   -   目标：*(N,\*)*，与输入拥有同样的形状
->   -   输出:标量scalar，即输出一个值。如果reduce为False,即不进行任何处理，则(N,*)，形状与输入相同。
-
-### BCEWithLogitsLoss(二分类)
-
-```python
-    torch.nn.BCEWithLogitsLoss(weight=None, size_average=None, reduce=None, reduction='mean', pos_weight=None)
-    # 与BCELoss的不同：将sigmoid函数和BCELoss方法结合到一个类中
-
-    pos_weight (Tensor,可选) –正值例子的权重，必须是有着与分类数目相同的长度的向量
-                            可以通过增加正值示例的权重来权衡召回率和准确性
-
-    如果不考虑参数pos_weigh，其实BCEWithLogitsLoss就相当于比BCELoss多进行了一个sigmoid操作，所以上面的例子：
-    loss = nn.BCEWithLogitsLoss()
-    input = torch.randn(3,requires_grad=True)
-    target = torch.empty(3).random_(2)
-    output = loss(input, target)
-```
-
-### NLLLoss(多分类) 用于多分类的负对数似然损失函数
-
-```python
-    torch.nn.NLLLoss(weight=None, size_average=None, ignore_index=-100, reduce=None, reduction='mean')
-    weight(可选) — 权重应该是一个一维张量，为每个类分配权重。当你有一个不平衡的训练集时，这是特别有用的。
-    ignore_index (int, 可选) – 指定一个被忽略的目标值，该目标值不影响输入梯度。当size_average为真时，对非忽略目标的损失进行平均
-    
-    m = nn.LogSoftmax(dim=1)
-    loss = nn.NLLLoss()
-    input = torch.randn(3,5,requires_grad=True)
-    target = torch.tensor([1,0,4])
-    output = loss(m(input), target)
-```
-
->   `通过在网络的最后一层添加LogSoftmax层，可以很容易地获得神经网络中的log-probability`。如果不喜欢添加额外的层，可以使用CrossEntropyLoss损失函数来替代。
->
->   -   输入：*(N,C), C*代表类别的数量；或者在计算高维损失函数例子中输入大小为(N,C,d1,d2,...,dK)，k>=1
->   -   目标：*(N)*，与输入拥有同样的形状，每一个值大小为为 0≤targets[i]≤C−1 ；或者在计算高维损失函数例子中输入大小为(N,C,d1,d2,...,dK)，k>=1
->   -   输出:标量scalar。如果reduction='none',则其大小与目标相同，为(N)或(N,C,d1,d2,...,dK)，k>=1
-
-### CrossEntropyLoss(多分类)
-
-`F.softmax() 是和nn.CrossEntropyLoss()连着用的，softmax后再进行算交叉熵损失，用nn.CrossEntropyLoss()算完损失，有一个log操作`
-
-```python
-    torch.nn.CrossEntropyLoss(weight=None, size_average=None, ignore_index=-100, reduce=None, reduction='mean')
-    weight(可选) — 权重应该是一个一维张量，为每个类分配权重。当你有一个不平衡的训练集时，这是特别有用的。
-	
-    该criterion期望在[0,c - 1]范围内的一个类指标作为小batch大小的一维张量的每个值的目标值;如果指定ignore_index，该criterion也接受这个类索引值(这个索引不一定在类范围内)。
-    
-    loss = nn.CrossEntropyLoss()
-    # input is of size N x C = 3 x 5
-    input = torch.randn(3,5,requires_grad=True)
-    #each element in target has to have 0 <= value < C
-    target = target = torch.empty(3, dtype=torch.long).random_(5)
-    output = loss(input, target)
-```
-
-### L1Loss(L1 norm)
-
-```python
-    torch.nn.L1Loss(size_average=None, reduce=None, reduction='mean')
-    # 创建一个criterion计算input x和target y的每个元素的平均绝对误差(mean absolute error (MAE))
-
-	reduction 默认设为'mean' — mean先对所有元素进行sum操作,然后除以n
-    					    如果设置reduction = 'sum'，除以n的操作可以省略，即只对所有元素进行sum操作
-        
-    loss = nn.L1Loss()
-    input = torch.randn(1, 2, requires_grad=True)#tensor([[-0.0625, -2.1603]], requires_grad=True)
-    target = torch.randn(1, 2)#tensor([[0.6789, 0.9831]])
-    output = loss(input, target)#tensor(1.9424, grad_fn=<L1LossBackward>)
-```
-
->   -   输入：*(N,\*)*, 代表任意数目附加维度
->   -   目标：*(N,\*)*，与输入拥有同样的形状
->   -   输出:标量scalar，即输出一个值。如果reduction='none',即不进行任何处理，则为(N,*)，形状与输入相同。
-
-![img](https://gitee.com/KangPeiLun/images/raw/master/images/1446032-20190514174536724-1218776360.png)
-
-### MSELoss(L2 norm) 
-
-**参数同L1Loss**
-
-```python
-    torch.nn.MSELoss(size_average=None, reduce=None, reduction='mean')
-    # 创建一个criterion计算input x和target y的每个元素的均方误差(mean absolute error (MAE))
-
-    loss = nn.MSELoss()
-    input = torch.randn(1, 2, requires_grad=True)#tensor([[-1.4445, -2.4888]], requires_grad=True)
-    target = torch.randn(1, 2)#tensor([[ 0.7117, -0.1200]])
-    output = loss(input, target)#tensor(5.1303, grad_fn=<MseLossBackward>)
-```
-
-![img](https://gitee.com/KangPeiLun/images/raw/master/images/1446032-20190514175559631-772920056.png)
-
-### SmoothL1Loss
-
-**参数同L1Loss**
-
-```python
-torch.nn.SmoothL1Loss(size_average=None, reduce=None, reduction='mean')
-# 创建一个criterion，如果绝对元素误差低于1，则使用平方项，否则使用L1项。与MSELoss相比，它对异常值的敏感度较低; 在某些情况下，它可以防止梯度的爆炸式增长
-```
-
-
 
 ## 5.加载Pytorch内置模型时也需要分配device
 
@@ -607,13 +450,30 @@ for epoch in range(start_epoch+1,80):  # ！！！注意这里是如何恢复epo
 
 ### 在主模型中加载子结构的预训练权重
 
+#### 将整个预训练权重都加载进去
+
 ```python
-def myModel(nn.Module):
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-    checkpoint_path = r"utils/swin_tiny_patch4_window7_224.pth"    # 预训练权重路径
-    self.swinnet = swin.SwinTransformer()						 # 实例化模型
-    para = torch.load(checkpoint_path,map_location=torch.device(device))	# 加载 反序列化好的 模型 信息，字典形式存储
-    self.swinnet.load_state_dict(para['model'])		# 该模型的参数保存在 'model' 中，需要按 字典取值 的方式取出 模型权重参数。 不同的模型的权重可能保存在 不同的字段中，这里只是举例
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+checkpoint_path = r"utils/swin_tiny_patch4_window7_224.pth"    # 预训练权重路径
+self.swinnet = swin.SwinTransformer()						 # 实例化模型
+para = torch.load(checkpoint_path,map_location=torch.device(device))	# 加载 反序列化好的 模型 信息，字典形式存储
+self.swinnet.load_state_dict(para['model'])		# 该模型的参数保存在 'model' 中，需要按 字典取值 的方式取出 模型权重参数。 不同的模型的权重可能保存在 不同的字段中，这里只是举例
+```
+
+#### 仅加载部分预训练权重
+
+```python
+self.swin_backbone = swin_tiny_patch4_window7_224(in_chans=in_chans, num_classes=num_classes)
+
+if use_pretrained:
+    # 使用预训练权重
+    pretrained_model_path = r'model_data/swin_tiny_patch4_window7_224.pth'
+    # param = torch.load(pretrained_model_path, map_location=torch.device(opt.device))
+    param = torch.load(pretrained_model_path, map_location='cuda:0')  # 加载预训练权重
+    model_dict = self.swin_backbone.state_dict()    # 获取原模型初始化权重参数
+    state_dict = {k: v for idx, (k, v) in enumerate(param.items()) if idx != 0}   # 修改要加载的参数。不加载 patch_embed.proj.weight(第0层) 层的参数，因为通道数可能真之前的不一致
+    model_dict.update(state_dict)  # 将预训练权重替换原来的模型权重
+    self.swin_backbone.load_state_dict(model_dict)
 ```
 
 
@@ -782,10 +642,14 @@ scheduler = ReduceLROnPlateau(optimizer, 'min')
 ```python
 torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max, eta_min=0, last_epoch=-1)
 
-# T_max(int)	一次学习率周期的迭代次数，即 T_max 个 epoch 之后重新设置学习率。
+# T_max(int)	一次学习率周期的迭代次数，即 T_max 个 epoch 之后学习率回复到初始状态。
 # eta_min(float)	最小学习率，即在一个周期中，学习率最小会下降到 eta_min，默认值为 0。
 # last_epoch	最后一个EPOCH 默认-1，可不设置
 ```
+
+其中的最关键的Tmax参数作一个说明,这个可以理解为余弦函数的半周期.`如果max_epoch=50次，那么设置T_max=5则会让学习率余弦周期性变化5次`
+
+![img](https://gitee.com/KangPeiLun/images/raw/master/images/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy9BSVI2ZVJlUGdqT2ViYkU0Mm5mQ0ZCcmFEak5PYzJXQk9pY3RyaWNzSFZpYTg2SXdlYmpzbnY2bUducE5sdWlia0ZUdndEc1VhaWJCTEo4dHhnQVpBWXN1SUxBLzY0MA)
 
 #### CosineAnnealingWarmRestarts 
 
@@ -793,7 +657,16 @@ torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max, eta_min=0, last_epo
 
 详见：[余弦AnnealingWarmRestarts — PyTorch 1.10.1 文档](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.CosineAnnealingWarmRestarts.html#torch.optim.lr_scheduler.CosineAnnealingWarmRestarts)
 
+> - `optimizer (Optimizer)` – Wrapped optimizer.
+> - `T_0 (int)` –  学习率第一次回到初始值的epoch位置
+> - `T_mult (int, optional)` – 重启后一个因子增加了 T_{i}T**i。 默认值：1
+> - `eta_min (float, optional)` – 最小学习率。 默认值：0
+> - `last_epoch (int, optional)` – 上一个epoch的索引。 默认值：-1
+> - `verbose (bool)` – 如果为 True，则为每次更新向标准输出打印一条消息。 默认值：假。
 
+在调节参数的时候，一定要根据自己总的epoch合理的设置参数，不然很可能达不到预期的效果,经过我自己的试验发现，如果是用那种等间隔的退火策略(CosineAnnealingLR和Tmult=1的CosineAnnealingWarmRestarts)，`验证准确率总是会在学习率的最低点达到一个很好的效果`，而随着学习率回升，验证精度会有所下降.所以`为了能最终得到一个更好的收敛点，设置T_mult>1是很有必要的`，这样到了**训练后期，学习率不会再有一个回升的过程,而且一直下降直到训练结束**.
+
+![img](https://gitee.com/KangPeiLun/images/raw/master/images/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy9BSVI2ZVJlUGdqT2ViYkU0Mm5mQ0ZCcmFEak5PYzJXQjNqdU1oUENsaWJiWDlqa2ZVMDFpYngyazhBM0lza0dpYVBEbUYyR3ZMWXNsWE5GT1BXWDJUOUtMQS82NDA)
 
 ## 18.技巧：np.clip用法
 
